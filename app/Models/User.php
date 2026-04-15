@@ -15,6 +15,11 @@ use Illuminate\Support\Carbon;
 use App\Models\Category;
 use App\Models\Task;
 
+// guards determine how users are authenticated for each request (just like gatekeeper, determining the surety of the request)
+// providers defines how users are retrieved from persistent storage (how do i fetch user data from db)
+// middleware acts as filters that can inspect and modify request before they reach controllers ()
+
+
 
 /**
  * @property int $id
