@@ -13,7 +13,19 @@ return new class extends Migration
     {
         Schema::create('tasks', function (Blueprint $table) {
             $table->id();
+            $table->string('title');
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('category_id')->nullable()->constrained()->nullOnDelete() ;
+            $table->text('descruiption')->nullable();
+            $table->boolean('is_recurring')->default(false);
+            $table->dateTime('task_date')->nullable();
+            $table->dateTime('completed_at')->nullable();
+
             $table->timestamps();
+
+            $table->index('user_id');
+            $table->index('category_id');
+
         });
     }
 
