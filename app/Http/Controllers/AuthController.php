@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LoginRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -18,27 +21,35 @@ class AuthController extends Controller
         return view('auth.register');
     }
 
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
+        
+        $throttleKey = strtolower($request->input('email')) . '|' . $request->ip() ;
 
-        $validatedResultData = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-            'remember' => ['nullable', 'boolean'],
-        ],
-        [
-            'email.required' => 'Please enter email',
-            'email.email' => 'Email entered not valid',
-            'password.required' => 'At least 3 digit'
-        ]
-        );
+        if(RateLimiter::tooManyAttempts($throttleKey, 5)){
+            throw ValidationException::withMessages([
+                'email' => 'Too many login attempt, try after 30 seconds'
+            ]) ;
+        }
 
         //Authentication logic..
-        if(Auth::attempt($request->only('email', 'password'), $request->boolean('remember') )){
+        if(Auth::attempt($request->only('email', 'password'), $request->boolean('remember') )) {
+            $request->session()->regenerate();
+
+            RateLimiter::clear($throttleKey);
+
+            return redirect()->intended( route('dashboard', absolute:false) );
 
         }
 
+        RateLimiter::hit($throttleKey);
+
+        throw ValidationException::withMessages([
+                'email' => 'These credentials do not match our records'
+            ]);
+
     }
+
 
 
 
