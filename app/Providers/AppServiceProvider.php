@@ -6,6 +6,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,12 +24,23 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $loginRateLimitResponse = function(){
-            throw ValidationException::withMessages(
+        $loginRateLimitResponse = function(Request $request){
+            if($request
+             ->expectsJson()) {
+                return response()
+                ->json(
+                    ['message' => 'Too many attempts. Please try again later'],
+                    429
+                );
+            }
+
+            return back()
+            ->withErrors(
                 [
                     'email' => 'Too many login attempts. Please try again later'
                 ]
-            );
+            )
+            ->withInput($request->except('password'));
         };
 
         RateLimiter::for('login',  function(Request $request) use ($loginRateLimitResponse) {
@@ -39,5 +51,19 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+
+        Password::defaults(function() {
+            if($this->app->isLocal()) {
+                return Password::min(4);
+            }
+
+            return Password::min(8)
+                ->mixedCase()
+                ->uncompromised()
+                ->letters()
+                ->symbols()
+                ->numbers();
+
+        });
     }
 }

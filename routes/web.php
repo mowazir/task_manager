@@ -11,13 +11,17 @@ Route::get('/', function () {
 // guards determine how users are authenticated for each request (just like gatekeeper, determining the surety of the request)
 // providers defines how users are retrieved from persistent storage (how do i fetch user data from db)
 // middleware acts as filters that can inspect and modify request before they reach controllers ()
+// listeners are classes that respond to specific events
+
 
 Route::middleware('guest')->group(function() {
-    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::get('/login', [AuthController::class, 'showLoginForm'])
+    ->name('login');
     Route::post('/login', [AuthController::class, 'login'])
     ->name('login.post')
     ->middleware('throttle:login');
-    Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
+    Route::get('/register', [AuthController::class, 'showRegisterForm'])
+    ->name('register');
   //  Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 });
 
